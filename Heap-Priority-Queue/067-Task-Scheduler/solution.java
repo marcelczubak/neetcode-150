@@ -18,8 +18,7 @@ class Solution {
         
         // Initialise queue ... [taskFreq, reuseTime]
         Queue<int[]> queue = new LinkedList<>();
-
-
+        
         while (!maxHeap.isEmpty() || !queue.isEmpty()) {
 
             // Task becomes available
