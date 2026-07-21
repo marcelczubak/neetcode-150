@@ -12,63 +12,153 @@ Category:
 
 ---
 
-# Main Insight
+# Core Question
 
-The current element can be part of many different increasing subsequences.
+For every index:
 
-For each index:
-
-Ask:
-
-> "What is the longest increasing subsequence I can build starting from here?"
+> "What is the longest increasing subsequence I can build from here?"
 
 ---
 
-# DP State
+# Recursive Thinking
+
+Function:
 
 ```
-dp[i]
+dfs(i)
 ```
 
-means:
+returns:
 
 ```
-The length of the LIS starting at index i
+LIS starting at index i
 ```
+
+Base:
+
+```
+current element alone = 1
+```
+
+Choice:
+
+For every future element:
+
+```
+if nums[i] < nums[j]
+```
+
+take:
+
+```
+1 + dfs(j)
+```
+
+---
+
+# Recursion Template
+
+```java
+private int dfs(int[] nums, int i) {
+
+    int longest = 1;
+
+    for (int j = i + 1; j < nums.length; j++) {
+
+        if (nums[i] < nums[j]) {
+            longest = Math.max(
+                longest,
+                1 + dfs(nums, j)
+            );
+        }
+    }
+
+    return longest;
+}
+```
+
+---
+
+# Why Recursion Is Slow
+
+Repeated work.
 
 Example:
 
 ```
-nums = [1,3,4,2]
+dfs(0)
+ |
+ +-- dfs(2)
 
-index 0:
+dfs(1)
+ |
+ +-- dfs(2)
+```
 
-1 -> 3 -> 4
+Same state calculated multiple times.
 
-dp[0] = 3
+---
+
+# Memoization
+
+Store:
+
+```
+memo[i]
+```
+
+Meaning:
+
+```
+LIS starting from i
+```
+
+Before recursion:
+
+```java
+if(memo[i] != 0)
+    return memo[i];
+```
+
+After calculating:
+
+```java
+memo[i] = result;
 ```
 
 ---
 
-# Base Case
+# Bottom-Up DP
 
-Every individual element is already a valid subsequence.
-
-Therefore:
+Same state:
 
 ```
-dp[i] = 1
+dp[i] = LIS starting at i
 ```
 
-for every index.
+but calculated iteratively.
+
+Initialization:
+
+```java
+Arrays.fill(dp,1);
+```
+
+because:
+
+```
+Every number alone is increasing
+```
 
 ---
 
 # Transition
 
-For each index:
+For every pair:
 
-Look at all numbers after it.
+```
+i < j
+```
 
 If:
 
@@ -79,174 +169,140 @@ nums[i] < nums[j]
 then:
 
 ```
-nums[j]
-```
-
-can extend the sequence.
-
-Update:
-
-```
-dp[i] = max(dp[i], 1 + dp[j])
+dp[i] = max(dp[i],1+dp[j])
 ```
 
 ---
 
-# Traversal Direction
+# Traversal
 
-We traverse backwards:
+Backward:
 
 ```
-right -> left
+n-1 -> 0
 ```
 
 because:
 
 ```
-dp[i]
-```
-
-depends on:
-
-```
-dp[j]
-```
-
-where:
-
-```
-j > i
-```
-
-So future values must already be calculated.
-
----
-
-# Example Walkthrough
-
-```
-nums = [1,3,2,4]
-```
-
-Start:
-
-```
-dp = [1,1,1,1]
-```
-
-Index 2:
-
-```
-2 -> 4
-
-dp[2] = 2
-```
-
-Index 1:
-
-```
-3 -> 4
-
-dp[1] = 2
-```
-
-Index 0:
-
-```
-1 -> 3 -> 4
-1 -> 2 -> 4
-
-dp[0] = 3
-```
-
-Answer:
-
-```
-3
+dp[i] depends on future states
 ```
 
 ---
 
-# Why Not Track Only Maximum?
+# Common Mistakes
 
-A tempting optimization:
+## 1. Forgetting initialization
 
-```
-highestDP
-```
-
-However:
-
-The LIS length alone is not enough.
-
-You also need to know:
-
-```
-which values created that length
-```
-
-Example:
-
-```
-[10,9,2,5,3,7]
-```
-
-A length of 3 could come from:
-
-```
-2,5,7
-```
-
-but a different starting value may not be able to extend it.
-
-The actual values matter.
-
----
-
-# Java Implementation
-
-Initialization:
+Wrong:
 
 ```java
-Arrays.fill(dp, 1);
+int[] dp = new int[n];
 ```
 
-Transition:
+because values become:
+
+```
+0
+```
+
+Correct:
 
 ```java
-if (nums[i] < nums[j]) {
-    dp[i] = Math.max(dp[i], 1 + dp[j]);
-}
+Arrays.fill(dp,1);
 ```
 
 ---
 
-# Complexity
+## 2. Checking only adjacent values
 
-Time:
-
-```
-O(n²)
-```
-
-Space:
+Wrong:
 
 ```
-O(n)
+nums[i] < nums[i+1]
+```
+
+The LIS may skip many elements.
+
+Need:
+
+```
+all j > i
+```
+
+---
+
+## 3. Confusing subsequence and subarray
+
+Subsequence:
+
+```
+[1,5,3,7]
+
+[1,3,7]
+```
+
+Subarray:
+
+```
+[5,3]
+```
+
+must be continuous.
+
+---
+
+# Complexity Summary
+
+## Recursion
+
+```
+Time: O(2^n)
+Space: O(n)
+```
+
+---
+
+## Memoization
+
+```
+Time: O(n²)
+Space: O(n)
+```
+
+---
+
+## Bottom-Up DP
+
+```
+Time: O(n²)
+Space: O(n)
 ```
 
 ---
 
 # Interview Explanation
 
-"I use dynamic programming where dp[i] represents the longest increasing subsequence starting at index i. Since each state depends on future indices, I iterate from right to left. For every index, I check all later values and extend the subsequence whenever a larger number is found."
+"I first model the problem recursively where each index represents the longest increasing subsequence starting there. This creates overlapping subproblems, so I memoize the result for each index. The bottom-up DP solution is the iterative equivalent where I compute the same states from right to left."
 
 ---
 
-# Related Problems
+# Mental Model
 
-- Longest Common Subsequence
-- Longest Increasing Subsequence II
-- Russian Doll Envelopes
-- Number of Longest Increasing Subsequence
-- Patience Sorting
+Recursion:
+
+```
+Try every possibility
+```
+
+Memoization:
+
+```
+Try every possibility once
+```
+
+Dynamic Programming:
+
+```
+Build the answers systematically
+```

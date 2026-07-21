@@ -5,12 +5,13 @@
 Given an integer array `nums`, return the length of the longest strictly increasing subsequence.
 
 A subsequence:
-- Maintains the original order of elements.
+- Maintains the relative order of elements.
 - Does not need to be contiguous.
+- Can skip elements.
 
 ---
 
-## Example 1
+## Example
 
 ### Input
 
@@ -40,51 +41,29 @@ Length:
 
 ---
 
-## Example 2
+# Approach 1: Recursion (Brute Force)
 
-### Input
+## Idea
 
-```
-nums = [0,1,0,3,2,3]
-```
+For every index, ask:
 
-### Output
+> "What is the longest increasing subsequence starting from this element?"
 
-```
-4
-```
-
-### Explanation
-
-One possible LIS:
+Define:
 
 ```
-[0,1,2,3]
+dfs(i) = length of LIS starting at index i
 ```
 
----
+At every index:
 
-# Approach
-
-## Dynamic Programming (Bottom-Up)
-
-We define:
+1. The element itself forms a subsequence:
 
 ```
-dp[i] = length of the longest increasing subsequence starting at index i
+length = 1
 ```
 
-Every element can form an increasing subsequence by itself:
-
-```
-dp[i] = 1
-```
-
----
-
-## Transition
-
-For every index `i`, check all elements after it.
+2. Try every future element.
 
 If:
 
@@ -92,9 +71,212 @@ If:
 nums[i] < nums[j]
 ```
 
-then `nums[j]` can extend the subsequence starting at `i`.
+then `nums[j]` can extend the subsequence.
 
-Therefore:
+Transition:
+
+```
+dfs(i) = max(dfs(i), 1 + dfs(j))
+```
+
+---
+
+## Recursive Structure
+
+Example:
+
+```
+nums = [1,3,4]
+```
+
+Starting at index 0:
+
+```
+1
+|
++-- 3
+|   |
+|   +-- 4
+|
++-- 4
+```
+
+The recursion explores all possible increasing subsequences.
+
+---
+
+## Complexity
+
+Time:
+
+```
+O(2^n)
+```
+
+because many possible subsequences are explored.
+
+Space:
+
+```
+O(n)
+```
+
+due to recursion depth.
+
+---
+
+# Approach 2: Recursion + Memoization
+
+## Problem with recursion
+
+The same states are calculated repeatedly.
+
+Example:
+
+```
+nums = [1,2,3,4]
+```
+
+`dfs(2)` may be reached from:
+
+```
+dfs(0)
+ |
+ +-- dfs(2)
+
+dfs(1)
+ |
+ +-- dfs(2)
+```
+
+We can store the answer after calculating it once.
+
+---
+
+## Memo State
+
+Create:
+
+```
+memo[i]
+```
+
+where:
+
+```
+memo[i] = LIS starting at index i
+```
+
+Before calculating:
+
+```java
+if (memo[i] != 0)
+    return memo[i];
+```
+
+After calculating:
+
+```java
+memo[i] = longest;
+```
+
+---
+
+## Complexity
+
+Number of states:
+
+```
+n
+```
+
+Each state checks:
+
+```
+n
+```
+
+future elements.
+
+Time:
+
+```
+O(n²)
+```
+
+Space:
+
+```
+O(n)
+```
+
+for memoization.
+
+---
+
+# Approach 3: Bottom-Up Dynamic Programming
+
+## Idea
+
+Convert the recursive relationship into an iterative solution.
+
+Instead of:
+
+```
+dfs(i)
+```
+
+we store:
+
+```
+dp[i]
+```
+
+where:
+
+```
+dp[i] = LIS starting at index i
+```
+
+---
+
+## Initialization
+
+Every element alone is a valid increasing subsequence:
+
+```
+dp[i] = 1
+```
+
+Example:
+
+```
+nums = [5,10,3]
+
+dp = [1,1,1]
+```
+
+---
+
+## Transition
+
+For every index:
+
+Look at all future indices.
+
+If:
+
+```
+nums[i] < nums[j]
+```
+
+then:
+
+```
+nums[i] can extend the LIS at j
+```
+
+Update:
 
 ```
 dp[i] = max(dp[i], 1 + dp[j])
@@ -102,234 +284,123 @@ dp[i] = max(dp[i], 1 + dp[j])
 
 ---
 
-## Example
+## Traversal Direction
+
+We iterate backwards:
 
 ```
-nums = [1,3,4,2]
-```
-
-Start from the end:
-
-```
-dp[3] = 1
+right -> left
 ```
 
 because:
 
 ```
-[2]
+dp[i]
 ```
 
-At index 1:
+depends on:
 
 ```
-nums[1] = 3
+dp[j]
 ```
 
-Can extend:
+where:
+
+```
+j > i
+```
+
+Future answers must already be calculated.
+
+---
+
+## Example
+
+```
+nums = [1,3,2,4]
+```
+
+Start:
+
+```
+dp = [1,1,1,1]
+```
+
+Index 2:
+
+```
+2 -> 4
+
+dp[2] = 2
+```
+
+Index 1:
 
 ```
 3 -> 4
-```
 
-so:
-
-```
 dp[1] = 2
 ```
 
-At index 0:
-
-```
-nums[0] = 1
-```
-
-Can extend:
+Index 0:
 
 ```
 1 -> 3 -> 4
-```
 
-so:
-
-```
 dp[0] = 3
 ```
 
----
-
-# Algorithm
-
-1. Create a DP array.
-2. Initialize every value to `1`.
-3. Traverse from right to left.
-4. For every index:
-   - Check every future index.
-   - If a larger number exists:
-       - Update the LIS length.
-5. Track the maximum value found.
-
----
-
-# Complexity
-
-Let:
+Answer:
 
 ```
-n = length of nums
-```
-
-## Time Complexity
-
-```
-O(n²)
-```
-
-Explanation:
-
-Each element checks every element after it.
-
-Number of comparisons:
-
-```
-n + (n-1) + (n-2) + ...
-```
-
-which simplifies to:
-
-```
-O(n²)
+3
 ```
 
 ---
 
-## Space Complexity
+# Comparison of Approaches
 
-```
-O(n)
-```
-
-The DP array stores the LIS length for every index.
-
----
-
-# Key DP Pattern
-
-When a problem asks:
-
-- "Longest..."
-- "Maximum length..."
-- "Best subsequence..."
-
-Think:
-
-```
-dp[i] = best answer involving index i
-```
+| Approach | Time | Space | Notes |
+|---|---|---|---|
+| Recursion | O(2^n) | O(n) | Explores all possibilities |
+| Memoization | O(n²) | O(n) | Avoids repeated states |
+| Bottom-Up DP | O(n²) | O(n) | Same logic without recursion |
 
 ---
 
-# Important Details
+# Why Not Track Only Maximum Length?
 
-## Subsequence vs Subarray
-
-### Subsequence
-
-Elements can be skipped:
+A common optimization attempt:
 
 ```
-[1,5,3,7]
-
-LIS:
-[1,3,7]
+highestDP
 ```
 
-### Subarray
+However:
 
-Must be continuous:
+The LIS length alone does not tell us which values produced it.
+
+Example:
 
 ```
-[1,5,3,7]
-
-Subarray:
-[5,3]
+[10,9,2,5,3,7]
 ```
+
+A sequence length of 3 could be:
+
+```
+2,5,7
+```
+
+but a different starting value might not be able to extend it.
+
+The actual values matter.
 
 ---
 
-# Common Mistakes
+# Advanced Optimization
 
-## 1. Forgetting initialization
-
-Wrong:
-
-```java
-int[] dp = new int[n];
-```
-
-because all values start at:
-
-```
-0
-```
-
-Correct:
-
-```java
-Arrays.fill(dp, 1);
-```
-
-because every element alone is a valid subsequence.
-
----
-
-## 2. Comparing adjacent values only
-
-Wrong idea:
-
-```
-if nums[i] < nums[i+1]
-```
-
-The next element does not necessarily create the best subsequence.
-
-Need to check:
-
-```
-all future elements
-```
-
----
-
-## 3. Confusing LIS direction
-
-Two valid definitions exist:
-
-Starting from index:
-
-```
-dp[i] = LIS starting at i
-```
-
-or ending at index:
-
-```
-dp[i] = LIS ending at i
-```
-
-Both work, but transitions differ.
-
-This solution uses:
-
-```
-starting at i
-```
-
----
-
-# Optimization
-
-There is an advanced:
+There is an:
 
 ```
 O(n log n)
@@ -341,18 +412,50 @@ solution using:
 binary search + tails array
 ```
 
-The idea:
+Idea:
 
-Maintain the smallest possible ending value for every LIS length.
-
-Example:
+Maintain:
 
 ```
-tails[0] = smallest tail of length 1
-tails[1] = smallest tail of length 2
-...
+tails[i]
 ```
 
-This reduces the time complexity but is less intuitive.
+where:
 
-The O(n²) DP solution is the standard interview solution.
+```
+tails[i] = smallest possible ending value of an increasing subsequence of length i+1
+```
+
+This is based on the patience sorting algorithm.
+
+---
+
+# Key Interview Takeaway
+
+When seeing:
+
+- Longest
+- Maximum length
+- Optimal subsequence
+
+Think:
+
+```
+Define a state representing the best answer from each position
+```
+
+For LIS:
+
+```
+dp[i] = best increasing subsequence starting at i
+```
+
+---
+
+# Related Problems
+
+- Longest Common Subsequence
+- Number of LIS
+- Russian Doll Envelopes
+- Increasing Triplet Subsequence
+- Longest String Chain
